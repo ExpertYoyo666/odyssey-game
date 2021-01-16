@@ -12,10 +12,7 @@ start:
     mov ax, @data
     mov ds, ax
 
-    mov ax, 000Dh   ; set video mode 0Dh (320x200 16 colors)
-    int 10h
-
-    mov ax, 0501h
+    mov ax, 0013h   ; set video mode 13h (320x200 256 colors)
     int 10h
 
     push 2h    ; color
@@ -28,7 +25,7 @@ start:
     push 10h    ; y0
     push 10h    ; x0
     call plotquadrilateral
-    add sp, 12h
+    add sp,12h
     
     push 1h    ; color
     push 0C8h   ; y1
@@ -36,10 +33,7 @@ start:
     push 60h    ; y0
     push 60h    ; x0
     call plotfilledrect
-    add sp, 0Ah
-
-    mov ax, 0500h
-    int 10h
+    add sp,0Ah
 
     ; wait for a keystroke to exit the program
     mov ah, 0h 
