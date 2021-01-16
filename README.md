@@ -9,7 +9,7 @@ Pre-requistists:
 How to build:
 =============
 + Open DOS emulator window
-+ Make sure TASM.EXE and TLINK.EXE are in the PATH envionmnet variable.
++ Make sure TASM.EXE and TLINK.EXE are in the PATH environment variable.
 + Change directory to the root folder of this repository
 + Run the 'build.bat' batch file
 + Run 'game.exe'
