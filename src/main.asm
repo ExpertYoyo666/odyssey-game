@@ -5,7 +5,7 @@ DATASEG
 
 include "pizza.inc"
 
-v_min dw 4
+v_min dw 7
 v_max dw -7
 character_velocity dw 0
 character_loc_x dw 20
