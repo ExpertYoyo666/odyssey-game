@@ -2,6 +2,10 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
+
+game_over_array db "G","A","M","E",20h,"O","V","E","R",0bh,0bh
+								db "p","r","e","s","s",02dh,"e",20h,"t","o",20h
+								db "e","x","i","t",$   ;27 items  include $
 include "pizza.inc"
 character_width dw 10h
 character_height dw 10h
@@ -26,7 +30,7 @@ PROC draw_character
 	mov ax,[bp+4h]
 	mov [bp-4h],ax
 	mov ax,[bp+6h]
-	mov [bp-2h],ax 
+	mov [bp-2h],ax
 	mov ax,[character_width]
 	mul [character_height]
 	mov [bp-6h],ax
@@ -34,7 +38,7 @@ PROC draw_character
 draw_char_loop:
 	mov bx,offset character  ; the offset of the array
 	mov al,[byte ptr bx+si]
-	
+
 	mov bh,0h
 	mov cx,[bp-4h]	; x
 	mov dx,[bp-2h]	; y
@@ -52,10 +56,10 @@ draw_char_inc_y:
 	mov ax,[bp+4h]
 	mov [bp-4h],ax
 draw_char_next_iter:
-	inc si 
+	inc si
 	cmp si,[bp-6h]
-	jl draw_char_loop 
-	
+	jl draw_char_loop
+
 end_draw_character:
 	add sp, 6h
 	pop bp
@@ -76,7 +80,7 @@ PROC remove_character
 	mov ax,[bp+4h]
 	mov [bp-4h],ax
 	mov ax,[bp+6h]
-	mov [bp-2h],ax 
+	mov [bp-2h],ax
 	mov ax,[character_width]
 	mul [character_height]
 	mov [bp-6h],ax
@@ -100,10 +104,10 @@ remove_char_inc_y:
 	mov ax,[bp+4h]
 	mov [bp-4h],ax
 remove_char_next_iter:
-	inc si 
+	inc si
 	cmp si,[bp-6h]
-	jl remove_char_loop 
-	
+	jl remove_char_loop
+
 end_remove_character:
 	add sp, 6h
 	pop bp
@@ -116,7 +120,7 @@ start:
 	mov ds,ax
 
 	mov ax, 0013h	; set video mode 13h (320x200 256 colors)
-	int 10h 
+	int 10h
 
 	push [character_loc_y]
 	push [character_loc_x]
