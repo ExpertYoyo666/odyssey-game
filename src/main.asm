@@ -4,10 +4,8 @@ STACK 100h
 DATASEG
 
 include "pizza.inc"
+include "gameover.inc"
 
-game_over_array db 0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,0Ah,09h,09h,"G","A","M","E",20h,"O","V","E","R",0Ah,0Ah
-								db 09h,20h,20h,20h,20h,"s","c","o","r","e",03Ah,0Ah,09h,20h,20h,20h,20h,0Ah,09h,20h,20h,20h,20h,"p","r","e","s","s",20h,022h,"e",022h,20h,"t","o",20h
-								db "e","x","i","t","$"   ;27 items  include $
 
 v_min dw 7
 v_max dw -7
@@ -27,6 +25,7 @@ reminder db 0
 result_min db 0
 result_sec db 0
 CODESEG
+include "ini_var.inc"
 ; draws a character on the screen
 ; character: character
 ; sp + 6: y
@@ -126,7 +125,13 @@ end_remove_character:
 
 endp remove_character
 
+PROC get_best_score
 
+
+
+
+	ret
+ENDP get_best_score
 start:
 	mov ax,@data
 	mov ds,ax
@@ -139,7 +144,7 @@ start:
 	call draw_character
 	add sp,4h
 
-main_loop:
+	main_loop:
     mov ah,2ch
     int 21h
     cmp dl,[time_counter]
@@ -228,7 +233,9 @@ continue1:
     cmp [character_loc_y],0
     jl game_over
 
-    cmp [character_loc_y],199
+		mov ax,200
+		sub ax,[character_height]
+    cmp [character_loc_y],ax   ;ax=200 - character_height
     jg game_over
 
     push [character_loc_y]
@@ -242,6 +249,7 @@ game_over:
 	mov dl,020h
 	mov ah,02h
 	int 21h
+
 	mov dl,[result_min]
 	add dl,30h
 	int 21h
@@ -257,55 +265,56 @@ game_over:
 	add dl,30h
 	int 21h
 
-	mov si,0
-
-loop_game_over:
-	mov bx,OFFSET game_over_array
-	mov al,[bx+si]
-	cmp al,"$"
-	je wait_for_response
-
-
-	mov dl,al
-	mov ah,02h
+	mov dx,OFFSET game_over_array
+	mov ah,9
 	int 21h
 
-	cmp al,03Ah
-	jne cont
-
-	mov dl,020h
-	mov ah,02h
+	mov dx,OFFSET score_array
+	mov ah,9
 	int 21h
+
 	mov dl,[result_min]
+	mov ah,02h
 	add dl,30h
 	int 21h
 
 	mov dl,03Ah
+	mov ah,02h
 	int 21h
 
 	mov dl,[result_sec]
+	mov ah,02h
 	add dl,30h
 	int 21h
 
 	mov dl,[reminder]
+	mov ah,02h
 	add dl,30h
 	int 21h
 
+	mov dx,OFFSET press_array
+	mov ah,9
+	int 21h
 
-	cont:
-	inc si
-	jmp loop_game_over
 
 wait_for_response:
+	;jmp start
 	mov ah,01h
 	int 16h
 	jnz wait_for_response
 
 	mov ah,00h
 	int 16h
-	cmp al,65h
+	cmp al,65h ;e
 	je exit
+	;jmp wait_for_response
+	cmp al,70h ;p
+	je restart
 	jmp wait_for_response
+
+	restart:
+	call try_again
+	jmp start
 
 exit:
 		mov ax,0
