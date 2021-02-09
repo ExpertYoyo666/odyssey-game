@@ -6,7 +6,6 @@ DATASEG
 include "pizza.inc"
 include "gameover.inc"
 
-
 v_min dw 7
 v_max dw -7
 character_velocity dw 0
@@ -26,6 +25,8 @@ result_min db 0
 result_sec db 0
 CODESEG
 include "ini_var.inc"
+EXTRN plotfilledrect:proc
+
 ; draws a character on the screen
 ; character: character
 ; sp + 6: y
@@ -76,62 +77,6 @@ end_draw_character:
 
 endp draw_character
 
-
-; removes the character from the screen
-; character: character
-; sp + 6: y
-; sp + 4: x
-PROC remove_character
-	push bp
-	mov bp, sp
-	add sp, -6h
-
-	mov si,0h   ; offset in the array
-	mov ax,[bp+4h]
-	mov [bp-4h],ax
-	mov ax,[bp+6h]
-	mov [bp-2h],ax
-	mov ax,[character_width]
-	mul [character_height]
-	mov [bp-6h],ax
-
-remove_char_loop:
-	mov al,00h
-	mov bh,0h
-	mov cx,[bp-4h]	; x
-	mov dx,[bp-2h]	; y
-	mov ah,0Ch
-	int 10h	; drawing the pixel
-
-	inc [word ptr bp-4h]
-	mov ax,[bp-4h]
-	sub ax,[bp+4h]
-	cmp ax,[character_width]
-	jge remove_char_inc_y
-	jmp remove_char_next_iter
-remove_char_inc_y:
-	inc [word ptr bp-2h]
-	mov ax,[bp+4h]
-	mov [bp-4h],ax
-remove_char_next_iter:
-	inc si
-	cmp si,[bp-6h]
-	jl remove_char_loop
-
-end_remove_character:
-	add sp, 6h
-	pop bp
-	ret
-
-endp remove_character
-
-PROC get_best_score
-
-
-
-
-	ret
-ENDP get_best_score
 start:
 	mov ax,@data
 	mov ds,ax
@@ -150,52 +95,51 @@ start:
     cmp dl,[time_counter]
     je main_loop
     mov [time_counter],dl
-		cmp dh,[sec_counter]
-		je same_sec
-		mov dl,020h
-		mov ah,02h
-		int 21h
+	cmp dh,[sec_counter]
+	je same_sec
+	mov dl,020h
+	mov ah,02h
+	int 21h
 
-		mov [sec_counter],dh
-		inc [time_since_start]
-		mov ax,[time_since_start]
-		mov cl,60
-		div cl
-		mov [reminder],ah      ; the reminder of the divede
-		mov [result_min],al           ; the rusult of the divede
-		mov dl,[result_min]											;put the result of the int in dl
-		add dl,30h     ;the ascii of dl value
-		mov ah,02h
-		int 21h
+	mov [sec_counter],dh
+	inc [time_since_start]
+	mov ax,[time_since_start]
+	mov cl,60
+	div cl
+	mov [reminder],ah      ; the reminder of the divede
+	mov [result_min],al           ; the rusult of the divede
+	mov dl,[result_min]											;put the result of the int in dl
+	add dl,30h     ;the ascii of dl value
+	mov ah,02h
+	int 21h
 
-		mov dl,03Ah      ;ascii of ":"
-		mov ah,02h
-		int 21h
+	mov dl,03Ah      ;ascii of ":"
+	mov ah,02h
+	int 21h
 
-		xor ax,ax         ;ax=0
-		mov al,[reminder]
-		mov cl,10
-		div cl
+	xor ax,ax         ;ax=0
+	mov al,[reminder]
+	mov cl,10
+	div cl
 
-		mov [reminder],ah     ;the result of the reminder
+	mov [reminder],ah     ;the result of the reminder
 
-		mov [result_sec],al
-		mov dl,[result_sec]													;the result of the int in dl
-		add dl,30h     ;the ascii of dl value
-		mov ah,02h
-		int 21h
+	mov [result_sec],al
+	mov dl,[result_sec]													;the result of the int in dl
+	add dl,30h     ;the ascii of dl value
+	mov ah,02h
+	int 21h
 
-		mov dl,[reminder]     ;the result of the reminder dl
-		add dl,30h     ;the ascii of dl value
-		mov ah,02h
-		int 21h
+	mov dl,[reminder]     ;the result of the reminder dl
+	add dl,30h     ;the ascii of dl value
+	mov ah,02h
+	int 21h
 
-		mov dl,0dh        ;returns to the front of the line
-		mov ah,02h
-		int 21h
+	mov dl,0dh        ;returns to the front of the line
+	mov ah,02h
+	int 21h
 
-
-		same_sec:
+	same_sec:
 
     mov ah,1h
     int 16h
@@ -222,10 +166,17 @@ dec_velocity:
     inc [character_velocity]
 
 continue1:
-    push [character_loc_y]
+	push 0
+	push [character_loc_y]
+	mov ax,[character_loc_x]
+	add ax,[character_width]
+	push ax
+    mov ax,[character_loc_y]
+	add ax,[character_height]
+	push ax
 	push [character_loc_x]
-  	call remove_character
-	add sp,4h
+  	call plotfilledrect
+	add sp,0Ah
 
     mov ax,[character_velocity]
     add [character_loc_y],ax
@@ -233,8 +184,8 @@ continue1:
     cmp [character_loc_y],0
     jl game_over
 
-		mov ax,200
-		sub ax,[character_height]
+    mov ax,200
+    sub ax,[character_height]
     cmp [character_loc_y],ax   ;ax=200 - character_height
     jg game_over
 
@@ -317,8 +268,8 @@ wait_for_response:
 	jmp start
 
 exit:
-		mov ax,0
-		int 10h
+    mov ax,0
+    int 10h
     mov ax, 4c00h
     int 21h
 END start
