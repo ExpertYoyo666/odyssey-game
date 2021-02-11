@@ -4,6 +4,9 @@ DATASEG
 
 include "pizza.inc"
 
+character_width dw 10h
+character_height dw 10h
+
 CODESEG
 
 ; draws a character on the screen
@@ -11,7 +14,7 @@ CODESEG
 ; sp + 6: y
 ; sp + 4: x
 PUBLIC draw_character
-PROC draw_character
+proc draw_character
     push bp
     mov bp, sp
     add sp, -6h

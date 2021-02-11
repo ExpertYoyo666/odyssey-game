@@ -5,6 +5,7 @@ DATASEG
 
 include "gameover.inc"
 
+; Character variables.
 v_min dw 7
 v_max dw -7
 character_velocity dw 0
@@ -22,15 +23,52 @@ minutes db 0
 seconds db 0
 
 CODESEG
-include "ini_var.inc"
 EXTRN plotfilledrect:proc
 EXTRN draw_character:proc
+EXTRN print_num:proc
+
+; reset all variable to restart the game.
+proc reset_variables
+    push ax
+
+    mov ax,0
+    mov [character_velocity],ax
+
+    mov ax,20
+    mov [character_loc_x],ax
+
+    mov ax,50
+    mov [character_loc_y],ax
+
+    mov al,0
+    mov [lastHundredthOfSecond],al
+
+    mov al,0
+    mov [lastSecond],al
+
+    mov ax,0
+    mov [seconds_since_start],ax
+
+    mov al,0
+    mov [reminder],al
+
+    mov al,0
+    mov [minutes],al
+
+    mov al,0
+    mov [seconds],al
+
+    pop ax
+    ret
+
+endp reset_variables
+
 
 start:
     mov ax,@data
     mov ds,ax
 
-    mov ax, 0013h	; set video mode 13h (320x200 256 colors)
+    mov ax,0013h	; set video mode 13h (320x200 256 colors)
     int 10h
 
     push [character_loc_y]
@@ -48,7 +86,7 @@ main_loop:
     mov [lastHundredthOfSecond],dl
     cmp dh,[lastSecond]
     je same_sec
-    mov dl,020h	; space
+    mov dl," "
     mov ah,02h
     int 21h
 
@@ -73,19 +111,19 @@ main_loop:
     mov cl,10
     div cl
 
-    mov [reminder],ah     ;the result of the reminder
+    mov [reminder],ah     ; the result of the reminder
     mov [seconds],al
-    mov dl,[seconds]   ;the result of the int in dl
+    mov dl,[seconds]   ; the result of the int in dl
     add dl,"0"
     mov ah,02h
     int 21h
 
-    mov dl,[reminder]     ;the result of the reminder dl
+    mov dl,[reminder]     ; the result of the reminder dl
     add dl,"0"
     mov ah,02h
     int 21h
 
-    mov dl,0dh        ;returns to the front of the line
+    mov dl,0dh        ; returns to the front of the line
     mov ah,02h
     int 21h
 
@@ -97,7 +135,7 @@ same_sec:
     mov ah,0ch
     mov al,0
     int 21h
-    cmp bl,20h ; space
+    cmp bl," "
     je jump
     jmp check_dec_velocity
 
@@ -174,51 +212,36 @@ game_over:
     mov ah,9
     int 21h
 
-    mov dl,[minutes]
-    mov ah,02h
-    add dl,30h
-    int 21h
-
-    mov dl,03Ah
-    mov ah,02h
-    int 21h
-
-    mov dl,[seconds]
-    mov ah,02h
-    add dl,30h
-    int 21h
-
-    mov dl,[reminder]
-    mov ah,02h
-    add dl,30h
-    int 21h
+    ; prints score.
+    mov ax,[seconds_since_start]
+    call print_num
 
     mov dx,OFFSET press_array
     mov ah,9
     int 21h
 
-wait_for_response:
-    ;jmp start
+game_over_wait_for_response:
     mov ah,01h
     int 16h
-    jnz wait_for_response
+    jnz game_over_wait_for_response
 
     mov ah,00h
     int 16h
-    cmp al,65h ;e
+
+    cmp al,"e"
     je exit
-    ;jmp wait_for_response
-    cmp al,70h ;p
+
+    cmp al,"p"
     je restart
-    jmp wait_for_response
+    jmp game_over_wait_for_response
 
 restart:
-    call try_again
+    call reset_variables
     jmp start
 
 exit:
     mov ax,0
     int 10h
-    mov ax, 4c00h
+    mov ax,4c00h
     int 21h
 END start
