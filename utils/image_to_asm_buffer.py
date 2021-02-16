@@ -19,7 +19,7 @@ def img_to_asm(img_name, output_name):
                 new_color = tuple([0]*3 + [255])
             else:
                 new_color = min(vga,
-                                key=lambda x: ((x[0] - pxl[0]) ** N + (x[1] - pxl[1]) ** N + (x[2] - pxl[2]) ** N)**(1./N))
+                                key=lambda x: ((x[0] - pxl[0]) ** N + (x[1] - pxl[1]) ** N + (x[2] - pxl[2]) ** N)**(1/N))
                 new_color += (255,)
             img[j, i] = new_color
 
@@ -39,4 +39,4 @@ def img_to_asm(img_name, output_name):
                 asm.write(f"{str(hex(vga.index(tuple(img[i, j][:3])))[2:]).zfill(3)}h")
             asm.write("\n")
 
-img_to_asm("pizza.png", "FILES/pizza.inc")
+img_to_asm(r"..\resources\pizza.png", r"..\src\inc\pizza.inc")

@@ -4,6 +4,7 @@ STACK 100h
 DATASEG
 
 include "gameover.inc"
+include "wall.inc"
 
 ; Character variables.
 v_min dw 7
@@ -26,6 +27,14 @@ CODESEG
 EXTRN plotfilledrect:proc
 EXTRN draw_character:proc
 EXTRN print_num:proc
+EXTRN draw_wall:proc
+EXTRN random:proc
+EXTRN init_seed:proc
+EXTRN init_wall_gap:proc
+EXTRN wall_gap_ceil:word
+EXTRN wall_gap_floor:word
+
+include "math.inc"
 
 ; reset all variable to restart the game.
 proc reset_variables
@@ -58,6 +67,9 @@ proc reset_variables
     mov al,0
     mov [seconds],al
 
+    mov ax,13Fh
+    mov [wall_loc_x],ax
+
     pop ax
     ret
 
@@ -75,6 +87,9 @@ start:
     push [character_loc_x]
     call draw_character
     add sp,4h
+
+    call init_seed
+    call init_wall_gap
 
 main_loop:
     ; Get elapsed time since the beginning of the game
@@ -111,24 +126,23 @@ main_loop:
     mov cl,10
     div cl
 
-    mov [reminder],ah     ; the result of the reminder
+    mov [reminder],ah     ; the result of the division
     mov [seconds],al
-    mov dl,[seconds]   ; the result of the int in dl
+    mov dl,[seconds]   ; the result of int 21h in dl
     add dl,"0"
     mov ah,02h
     int 21h
 
-    mov dl,[reminder]     ; the result of the reminder dl
+    mov dl,[reminder]     ; the result of the reminder in dl
     add dl,"0"
     mov ah,02h
     int 21h
 
-    mov dl,0dh        ; returns to the front of the line
+    mov dl,0dh        ; returns to the start of the line
     mov ah,02h
     int 21h
 
 same_sec:
-
     mov ah,1h
     int 16h
     mov bl,al
@@ -142,18 +156,18 @@ same_sec:
 jump:
     mov ax,[v_max]
     mov [character_velocity],ax
-    jmp continue1
+    jmp remove_char
 
 check_dec_velocity:
     mov ax,[v_min]
     cmp [character_velocity],ax
     jl dec_velocity
-    jmp continue1
+    jmp remove_char
 
 dec_velocity:
     inc [character_velocity]
 
-continue1:
+remove_char:
     push 0
     push [character_loc_y]
     mov ax,[character_loc_x]
@@ -166,15 +180,63 @@ continue1:
     call plotfilledrect
     add sp,0Ah
 
+remove_wall:
+    mov ax,[wall_gap_ceil]
+    push ax
+    add ax,[wall_gap_floor]
+    push ax 
+    mov ax,[wall_velocity]
+    max ax,[wall_width]
+    push ax
+    push 0
+    add ax,[wall_loc_x]
+    push ax 
+    call draw_wall
+    add sp,0Ah
+
     mov ax,[character_velocity]
     add [character_loc_y],ax
 
+    mov ax,[wall_velocity]
+    sub [wall_loc_x],ax
+
+check_in_gap_1:
+    mov ax,[character_loc_x]
+    add ax,[character_width]
+    cmp [wall_loc_x],ax
+    jle check_in_gap_2
+    jmp no_wall_character_collision
+
+check_in_gap_2:
+    mov bx,[wall_loc_x]
+    add bx,[wall_width]
+    cmp ax,bx
+    jle check_in_gap_3
+    jmp no_wall_character_collision
+
+check_in_gap_3:
+    mov ax,[character_loc_y]
+    cmp ax,[wall_gap_ceil]
+    jg check_in_gap_4
+    mov [seconds_since_start],0
+    jmp game_over
+
+check_in_gap_4:
+    add ax,[character_height]
+    cmp [wall_gap_floor],ax
+    jg no_wall_character_collision
+    mov [seconds_since_start],10
+    jmp game_over
+
+no_wall_character_collision:
     cmp [character_loc_y],0
-    jl game_over
+    jge not_hit_ceil
+    jmp game_over
+not_hit_ceil:
 
     mov ax,200
     sub ax,[character_height]
-    cmp [character_loc_y],ax   ;ax=200 - character_height
+    cmp [character_loc_y],ax   ; ax=200 - character_height
     jg game_over
 
     push [character_loc_y]
@@ -182,28 +244,41 @@ continue1:
     call draw_character
     add sp,4h
 
+    push [wall_gap_floor]
+    push [wall_gap_ceil]
+    push [wall_width]
+    push [wall_color]
+    push [wall_loc_x]
+    call draw_wall
+    add sp,0Ah
+
+    mov ax,[wall_loc_x]
+    mov bx,[wall_width]
+    neg bx
+    cmp ax,bx
+    jle reset_wall
+
+    jmp main_loop
+
+reset_wall:
+    mov ax,[wall_gap_ceil]
+    push ax
+    add ax,[wall_gap_floor]
+    push ax 
+    mov ax,[wall_velocity]
+    max ax,[wall_width]
+    push ax
+    push 0
+    add ax,[wall_loc_x]
+    push ax 
+    call draw_wall
+    add sp,0Ah
+
+    mov [wall_loc_x],13Fh
+    call init_wall_gap
     jmp main_loop
 
 game_over:
-    mov dl,020h
-    mov ah,02h
-    int 21h
-
-    mov dl,[minutes]
-    add dl,30h
-    int 21h
-
-    mov dl,03Ah
-    int 21h
-
-    mov dl,[seconds]
-    add dl,30h
-    int 21h
-
-    mov dl,[reminder]
-    add dl,30h
-    int 21h
-
     mov dx,OFFSET game_over_array
     mov ah,9
     int 21h
