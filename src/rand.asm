@@ -7,6 +7,7 @@ seed dw 0
 CODESEG
 ; returns dx:ax mod m in ax.
 ; sp + 4: m
+PUBLIC modulu
 proc modulu
     push bp
     mov bp,sp
@@ -40,30 +41,30 @@ proc random
     mul bx
     add ax,673
     mov [seed],ax
-    
-    push [bp+4] 
+
+    push [bp+4]
     call modulu
-    add sp,2 
+    add sp,2
 
     pop dx
     pop bx
     pop bp
-    ret 
-    
+    ret
+
 endp random
-    
+
 ; init the seed to the 16 lower bits of the # of clock ticks since midnight.
 PUBLIC init_seed
 proc init_seed
     push cx
     push dx
-    mov ah,00h 
-   	int 1Ah  
+    mov ah,00h
+   	int 1Ah
 
     mov [seed],dx
     pop dx
     pop cx
-    ret 
+    ret
 
 endp init_seed
 

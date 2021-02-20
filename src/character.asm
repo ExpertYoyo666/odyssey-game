@@ -4,7 +4,7 @@ DATASEG
 
 include "pizza.inc"
 
-character_width dw 10h
+character_width dw 10h  ;16 dec
 character_height dw 10h
 
 CODESEG
@@ -59,5 +59,6 @@ end_draw_character:
     ret
 
 endp draw_character
+
 
 END

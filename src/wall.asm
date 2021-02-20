@@ -22,7 +22,8 @@ include "math.inc"
 ; sp + 6: color
 ; sp + 4: x cord of the left side of the wall
 PUBLIC draw_wall
-proc draw_wall 
+
+proc draw_wall
     push bp
     mov bp,sp
 
@@ -36,20 +37,20 @@ proc draw_wall
     push 0
     mov ax,[bp+4]
     max ax,0
-    push ax 
+    push ax
     call plotfilledrect
-    add sp,0Ah  
+    add sp,0Ah
 
     push [bp+6]
     push [bp+0Ch]
     mov ax,[bp+4]
     add ax,[bp+8]
     min ax,[screen_width]
-    push ax 
+    push ax
     push [screen_height]
     mov ax,[bp+4]
     max ax,0
-    push ax 
+    push ax
     call plotfilledrect
     add sp,0Ah
 
@@ -59,6 +60,7 @@ proc draw_wall
 endp draw_wall
 
 PUBLIC init_wall_gap
+
 proc init_wall_gap
     push ax
     mov ax,[screen_height]
@@ -66,7 +68,7 @@ proc init_wall_gap
     push ax
     call random
     add sp,2
-    
+
     mov [wall_gap_ceil],ax
 
     push [maximum_gap]

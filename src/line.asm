@@ -1,4 +1,4 @@
-IDEAL 
+IDEAL
 MODEL small
 DATASEG
 
@@ -41,13 +41,13 @@ save_dx:
     jmp save_sx
 calc_sx_case2:
     mov	ax,-1
-save_sx: 
+save_sx:
     mov	[bp-0Ah],ax
 
     ; dy = if (y1>y0) (y0-y1) else (y1-y0)
     mov ax,[bp+0Ah]
     cmp ax,[bp+6]
-    jle calc_dy_y1_le_y0  
+    jle calc_dy_y1_le_y0
     mov	ax,[bp+6]
     sub	ax,[bp+0Ah]
     jmp save_dy
@@ -68,7 +68,7 @@ calc_sy_case2:
 save_sy:
     mov	[bp-0Ch],ax
 
-    ; err = dx+dy 
+    ; err = dx+dy
     mov	ax,[bp-6]
     add	ax,[bp-8]
     mov	[bp-10h],ax
@@ -92,14 +92,14 @@ draw_line_loop:
 
     ; break from loop
     jmp end_plot_line
-    
+
     ; e2 = 2*err
 error_check_setup:
     mov	ax,[bp-10h]
     shl	ax,1
     mov	[bp-0Eh],ax
 
-    ; if (e2 >= dy)  
+    ; if (e2 >= dy)
     mov	ax,[bp-0Eh]
     cmp	ax,[bp-8]
     jl error_check_dx
@@ -113,8 +113,8 @@ error_check_setup:
     mov	ax,[bp+4]
     add	ax,[bp-0Ah]
     mov	[bp+4],ax
-    
-    ; if (e2 <= dx)  
+
+    ; if (e2 <= dx)
 error_check_dx:
     mov	ax,[bp-0Eh]
     cmp	ax,[bp-6h]
@@ -132,7 +132,7 @@ inc_y_cord:
 
 next_loop_iteration:
     jmp draw_line_loop
-    
+
 end_plot_line:
     add	sp,0Ch
     pop dx
