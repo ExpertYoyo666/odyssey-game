@@ -27,8 +27,11 @@ proc draw_wall
     push bp
     mov bp,sp
 
+
     push [bp+6]
-    push [bp+0Ah]
+    ;push [bp+0Ah]
+    mov ax, [bp+0Ah]
+    push ax
 
     mov ax,[bp+4]
     add ax,[bp+8]

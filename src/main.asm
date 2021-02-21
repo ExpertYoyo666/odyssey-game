@@ -6,6 +6,7 @@ DATASEG
 include "gameover.inc"
 include "wall.inc"
 include "coin.inc"
+
 ; Character variables.
 v_min dw 7
 v_max dw -7
@@ -19,6 +20,7 @@ coin_loc_x dw 304
 wait_to_draw_coin dw 50
 hide_coin db 0
 coins_counter dw 0
+switch_coin db 0
 
 
 ; Time keeping variables
@@ -28,7 +30,6 @@ seconds_since_start dw 0
 reminder db 0
 minutes db 0
 seconds db 0
-
 
 
 CODESEG
@@ -43,6 +44,7 @@ EXTRN init_wall_gap:proc
 EXTRN wall_gap_ceil:word
 EXTRN wall_gap_floor:word
 EXTRN draw_coin:proc
+EXTRN draw_coin2:proc
 
 include "math.inc"
 
@@ -85,6 +87,7 @@ proc reset_variables
     mov [wait_to_draw_coin],50
     mov [hide_coin] , 0
     mov [coins_counter] , 0
+    mov [switch_coin], 0
 
 
 
@@ -102,15 +105,18 @@ start:
     int 10h
 
 
-
-
-    push [character_loc_y]
-    push [character_loc_x]
-    call draw_coin
-    add sp,4h
+    ;push [character_loc_y]
+    ;push [character_loc_x]
+    ;call draw_coin
+    ;add sp,4h
 
     call init_seed
     call init_wall_gap
+    call init_seed
+    push 184
+    call random
+    add sp,2
+    mov [coin_loc_y],ax
 
 main_loop:
     ; Get elapsed time since the beginning of the game
@@ -317,8 +323,13 @@ not_hit_ceil:
     ;make sure the coin wont spawn into a wall
     cmp [coin_loc_x],304
     jb not_start_moving_now
+    cmp [seconds_since_start],30
+    jb not_switch
+    mov [switch_coin],1
+    not_switch:
+
     mov [hide_coin],0
-    cmp [wall_loc_x],300
+    cmp [wall_loc_x],288
     jbe ok_wall_loc_x
     add [wait_to_draw_coin],20
     jmp not_draw_coin
@@ -370,14 +381,27 @@ not_hit_ceil:
     add [coin_loc_x],-4
     cmp [hide_coin],1
     je not_draw_coin
+
+
+    cmp [switch_coin],0
+    je not_switching
+    push [coin_loc_y]
+    push [coin_loc_x]
+    call draw_coin2
+
+    not_switching:
+    cmp [switch_coin],0
+    jne not_draw_coin
     push [coin_loc_y]
     push [coin_loc_x]
     call draw_coin
 
     not_draw_coin:
 
-
+    cmp [wait_to_draw_coin],0
+    jbe not_dec
     dec [wait_to_draw_coin]
+    not_dec:
 
     mov ax,200
     sub ax,[character_height]
@@ -479,7 +503,7 @@ game_over:
     mov ax,[coins_counter]
     mov cx,10
     mul cx
-    add [seconds_since_start],ax
+    ;add [seconds_since_start],ax
     mov ax,[seconds_since_start]
     call print_num
 
