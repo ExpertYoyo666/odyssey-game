@@ -46,6 +46,7 @@ EXTRN wall_gap_ceil:word
 EXTRN wall_gap_floor:word
 EXTRN draw_coin:proc
 EXTRN draw_coin2:proc
+EXTRN draw_coin3:proc
 
 include "math.inc"
 
@@ -324,9 +325,10 @@ not_hit_ceil:
     ;make sure the coin wont spawn into a wall
     cmp [coin_loc_x],304
     jb not_start_moving_now
-    cmp [seconds_since_start],30
-    jb not_switch
-    mov [switch_coin],1
+    mov ax,[seconds_since_start]
+    mov cl,30
+    div cl
+    mov [switch_coin],al
 
     not_switch:
 
@@ -395,17 +397,39 @@ not_hit_ceil:
 
 
     cmp [switch_coin],0
-    je not_switching
-    push [coin_loc_y]
-    push [coin_loc_x]
-    call draw_coin2
-
-    not_switching:
-    cmp [switch_coin],0
-    jne not_draw_coin
+    ja contin1
     push [coin_loc_y]
     push [coin_loc_x]
     call draw_coin
+    jmp not_draw_coin
+
+
+    contin1:
+    cmp [switch_coin],1
+    ja contin2
+    push [coin_loc_y]
+    push [coin_loc_x]
+    call draw_coin2
+    jmp not_draw_coin
+
+
+    contin2:
+    push [coin_loc_y]
+    push [coin_loc_x]
+    call draw_coin3
+
+
+    ;je not_switching
+    ;push [coin_loc_y]
+    ;push [coin_loc_x]
+    ;call draw_coin2
+
+    ;not_switching:
+    ;cmp [switch_coin],0
+    ;jne not_draw_coin
+    ;push [coin_loc_y]
+    ;push [coin_loc_x]
+    ;call draw_coin
 
     not_draw_coin:
 
