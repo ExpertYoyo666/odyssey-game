@@ -21,6 +21,7 @@ wait_to_draw_coin dw 50
 hide_coin db 0
 coins_counter dw 0
 switch_coin db 0
+coin_velocity dw 4
 
 
 ; Time keeping variables
@@ -326,6 +327,7 @@ not_hit_ceil:
     cmp [seconds_since_start],30
     jb not_switch
     mov [switch_coin],1
+
     not_switch:
 
     mov [hide_coin],0
@@ -377,8 +379,17 @@ not_hit_ceil:
     inc [coins_counter]
 
     cont1:
+    mov ax,[seconds_since_start]
+    mov cl,15
+    div cl
+    mov ah,0
+    mov [coin_velocity],ax
+    mov [wall_velocity],ax
+    add [coin_velocity],4
+    add [wall_velocity],4
 
-    add [coin_loc_x],-4
+    mov ax,[coin_velocity]
+    sub [coin_loc_x],ax
     cmp [hide_coin],1
     je not_draw_coin
 
@@ -503,7 +514,7 @@ game_over:
     mov ax,[coins_counter]
     mov cx,10
     mul cx
-    ;add [seconds_since_start],ax
+    add [seconds_since_start],ax
     mov ax,[seconds_since_start]
     call print_num
 
