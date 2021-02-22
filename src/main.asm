@@ -21,7 +21,7 @@ wait_to_draw_coin dw 50
 hide_coin db 0
 coins_counter dw 0
 switch_coin db 0
-coin_velocity dw 4
+coin_velocity dw 0
 
 
 ; Time keeping variables
@@ -90,6 +90,8 @@ proc reset_variables
     mov [hide_coin] , 0
     mov [coins_counter] , 0
     mov [switch_coin], 0
+    mov [coin_velocity],0
+    mov [wall_velocity],4
 
 
 
@@ -121,6 +123,8 @@ start:
     mov [coin_loc_y],ax
 
 main_loop:
+
+  mov [coin_velocity],0
     ; Get elapsed time since the beginning of the game
     mov ah,2ch
     int 21h
@@ -266,19 +270,19 @@ check_in_gap_3:
     cmp ax,[wall_gap_ceil]
     jg check_in_gap_4
     ;mov [seconds_since_start],0
-    jmp game_over
+    ;jmp game_over
 
 check_in_gap_4:
     add ax,[character_height]
     cmp [wall_gap_floor],ax
     jg no_wall_character_collision
     ;mov [seconds_since_start],10
-    jmp game_over
+    ;jmp game_over
 
 no_wall_character_collision:
     cmp [character_loc_y],0
     jge not_hit_ceil
-    jmp game_over
+    ;jmp game_over
 not_hit_ceil:
 
 
@@ -322,7 +326,7 @@ not_hit_ceil:
 
     not_cullision_coin:
 
-    ;make sure the coin wont spawn into a wall
+
     cmp [coin_loc_x],304
     jb not_start_moving_now
     mov ax,[seconds_since_start]
@@ -331,8 +335,8 @@ not_hit_ceil:
     mov [switch_coin],al
 
     not_switch:
-
     mov [hide_coin],0
+    ;make sure the coin wont spawn into a wall
     cmp [wall_loc_x],288
     jbe ok_wall_loc_x
     add [wait_to_draw_coin],20
@@ -417,19 +421,6 @@ not_hit_ceil:
     push [coin_loc_y]
     push [coin_loc_x]
     call draw_coin3
-
-
-    ;je not_switching
-    ;push [coin_loc_y]
-    ;push [coin_loc_x]
-    ;call draw_coin2
-
-    ;not_switching:
-    ;cmp [switch_coin],0
-    ;jne not_draw_coin
-    ;push [coin_loc_y]
-    ;push [coin_loc_x]
-    ;call draw_coin
 
     not_draw_coin:
 
