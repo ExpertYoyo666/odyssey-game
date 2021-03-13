@@ -13,8 +13,16 @@ proc print_num
     push cx
     push dx
 
-    mov cx,0 
+    mov cx,0
     mov dx,0 
+
+    cmp ax,0 
+    jne get_digit_loop
+
+    mov dl,"0"
+    mov ah,02h
+    int 21h
+    jmp exit_print_num
 
 get_digit_loop: 
     cmp ax,0 

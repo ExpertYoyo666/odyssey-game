@@ -7,19 +7,20 @@ seed dw 0
 CODESEG
 ; returns dx:ax mod m in ax.
 ; sp + 4: m
+PUBLIC modulu
 proc modulu
     push bp
     mov bp,sp
+    push bx
     push dx
 
-    push dx
     mov bx,[word ptr bp+4]
     xor dx,dx
     div bx
     mov ax,dx
-    pop dx
 
     pop dx
+    pop bx
     pop bp
     ret
 

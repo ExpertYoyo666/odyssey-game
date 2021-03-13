@@ -1,9 +1,8 @@
-wall_width dw 10h
-wall_color dw 28h
-wall_velocity dw 04h
-wall_loc_x dw 13Fh
-screen_width dw 13Fh
-screen_height dw 0C7h
+wall_width equ 18h
+wall_color equ 33h
+wall_velocity equ 06h
+screen_width equ 13Fh
+screen_height equ 0C7h
 
-minimum_gap dw 50
-maximum_gap dw 80
+minimum_gap equ 48
+maximum_gap equ 65
