@@ -228,7 +228,7 @@ remove_wall:
 
 
 
-    jmp no_wall_character_collision
+    ;jmp no_wall_character_collision
 after_passes_the_gap:
     mov ax,[wall_loc_x]
     add ax, wall_width
