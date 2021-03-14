@@ -1,8 +1,6 @@
 IDEAL
 MODEL small
 STACK 100h
-
-
 DATASEG
 
 include "gameover.inc"
@@ -38,7 +36,7 @@ coin_velocity dw 6
 ; Time keeping variables
 lastHundredthOfSecond db 0
 lastSecond db 0
-seconds_since_start dw 50
+seconds_since_start dw 0
 reminder db 0
 minutes db 0
 seconds db 0
@@ -118,6 +116,9 @@ proc reset_variables
     mov ax,4
     mov [wall_velocity],ax
 
+    mov al,0
+    mov [thirty_sec],al
+
     pop ax
     ret
 
@@ -127,16 +128,11 @@ start:
     mov ax,@data
     mov ds,ax
 
-
     mov ax,0013h	; set video mode 13h (320x200 256 colors)
     int 10h
 
-
-
     call init_seed
-
     mov [wall_color],color1
-
 
 restart_game:
     ; Move cursor to 0,0
@@ -226,9 +222,6 @@ remove_wall:
     mov ax,wall_velocity
     sub [wall_loc_x],ax
 
-
-
-    ;jmp no_wall_character_collision
 after_passes_the_gap:
     mov ax,[wall_loc_x]
     add ax, wall_width
@@ -255,8 +248,6 @@ check_in_gap_3:
     jg  no_wall_character_collision
 
     jmp game_over
-
-
 
 no_wall_character_collision:
     cmp [character_loc_y],0
@@ -317,8 +308,6 @@ coin_main:
     mov ax,[coin_velocity]
     sub [coin_loc_x],ax
 
-
-
 check_character_coin_collision_1:
     mov ax,[coin_loc_x]
     add ax,coin_width
@@ -365,7 +354,6 @@ init_coin_reset:
     jmp draw_char
 
 draw_coin:
-
     mov ax,[coin_loc_x]
     add ax, coin_width
     cmp ax, [wall_loc_x]
@@ -375,7 +363,6 @@ draw_coin:
     add ax, wall_width
     cmp ax,[coin_loc_x]
     jb cont_d_ok
-    ;mov [do_reset_coin],1
     jmp draw_char
 
     cont_d_ok:
@@ -392,16 +379,11 @@ draw_char:
     call draw_character
     add sp,6h
 
-    ;draw wall
     mov ax,[seconds_since_start]
     mov cl,30
     div cl
     mov [thirty_sec],al
 
-
-
-
-    color_seted:
     push [wall_gap_floor]
     push [wall_gap_ceil]
     push wall_width
@@ -422,9 +404,6 @@ draw_char:
     mov dl,0dh        ; returns to the start of the line
     mov ah,02h
     int 21h
-    ;mov dl," "
-    ;mov ah,02h
-    ;int 21h
     mov dx,OFFSET timer_array
     mov ah,9
     int 21h
@@ -432,7 +411,7 @@ draw_char:
     mov cl,60
     div cl
     mov [reminder],ah    ; the reminder of the division
-    mov ax,[word ptr minutes]
+    mov ah,0
     call print_num
     mov dl,":"
     mov ah,02h
@@ -477,19 +456,17 @@ reset_wall:
     cmp [thirty_sec],0
     ja color2l
     mov [wall_color],color1
-    jmp color_seted
+    jmp main_loop
 
-
-    color2l:
+color2l:
     cmp [thirty_sec],1
     ja color3l
     mov [wall_color],color2
-    jmp color_seted
+    jmp main_loop
 
-    color3l:
+color3l:
     mov [wall_color],color3
 
-    ;call updateScreenBuffer
     jmp main_loop
 
 game_over:
