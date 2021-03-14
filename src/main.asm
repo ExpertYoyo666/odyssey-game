@@ -1,6 +1,8 @@
 IDEAL
 MODEL small
 STACK 100h
+
+
 DATASEG
 
 include "gameover.inc"
@@ -10,6 +12,8 @@ include "pizza.inc"
 include "coins.inc"
 include "math.inc"
 include "timer.inc"
+
+wall_color dw 0
 
 ; Character variables.
 v_min dw 6
@@ -26,7 +30,7 @@ coin_loc_x dw 304
 coin_width equ 16
 coin_height equ 16
 do_reset_coin db 0
-wait_to_draw_coin dw 50
+wait_to_draw_coin dw 0
 coins_counter dw 0
 switch_coin db 0
 coin_velocity dw 6
@@ -34,10 +38,11 @@ coin_velocity dw 6
 ; Time keeping variables
 lastHundredthOfSecond db 0
 lastSecond db 0
-seconds_since_start dw 0
+seconds_since_start dw 50
 reminder db 0
 minutes db 0
 seconds db 0
+thirty_sec db 0
 
 EXTRN wall_gap_ceil:word
 EXTRN wall_gap_floor:word
@@ -92,9 +97,9 @@ proc reset_variables
     mov ax,100
     mov [coin_loc_y],ax
 
-    mov ax,304 
+    mov ax,304
     mov [coin_loc_x],ax
-    
+
     mov al,0
     mov [do_reset_coin],al
 
@@ -122,20 +127,26 @@ start:
     mov ax,@data
     mov ds,ax
 
+
     mov ax,0013h	; set video mode 13h (320x200 256 colors)
     int 10h
 
+
+
     call init_seed
 
-restart_game:    
+    mov [wall_color],color1
+
+
+restart_game:
     ; Move cursor to 0,0
     mov dx,0
     mov bh,0
     mov ah,02h
     int 10h
-    
+
     call init_wall_gap
-    
+
     mov [wait_to_draw_coin],25
     mov [do_reset_coin],1
 
@@ -199,13 +210,13 @@ remove_wall:
     mov ax,[wall_gap_ceil]
     push ax
     mov ax,[wall_gap_floor]
-    push ax 
+    push ax
     mov ax,wall_velocity
     max ax,wall_width
     push ax
     push 0
     add ax,[wall_loc_x]
-    push ax 
+    push ax
     call draw_wall
     add sp,0Ah
 
@@ -214,6 +225,16 @@ remove_wall:
 
     mov ax,wall_velocity
     sub [wall_loc_x],ax
+
+
+
+    jmp no_wall_character_collision
+after_passes_the_gap:
+    mov ax,[wall_loc_x]
+    add ax, wall_width
+    sub ax,6
+    cmp [character_loc_x],ax
+    jae no_wall_character_collision
 
 check_in_gap_1:
     mov ax,[character_loc_x]
@@ -228,10 +249,14 @@ check_in_gap_2:
     jmp game_over
 
 check_in_gap_3:
+    mov ax,[character_loc_y]
     add ax,character_height
-    cmp [wall_gap_floor],ax    
+    cmp [wall_gap_floor],ax
     jg  no_wall_character_collision
+
     jmp game_over
+
+
 
 no_wall_character_collision:
     cmp [character_loc_y],0
@@ -261,7 +286,7 @@ reset_coin:
     sub ax,wall_width
     cmp [wall_loc_x],ax
     jle coin_is_not_on_wall
-    add [wait_to_draw_coin],50
+    add [wait_to_draw_coin],20
     jmp draw_char
 
 coin_is_not_on_wall:
@@ -292,6 +317,8 @@ coin_main:
     mov ax,[coin_velocity]
     sub [coin_loc_x],ax
 
+
+
 check_character_coin_collision_1:
     mov ax,[coin_loc_x]
     add ax,coin_width
@@ -303,7 +330,7 @@ check_character_coin_collision_2:
     add ax,character_width
     cmp ax,[coin_loc_x]
     jle no_character_coin_collision
- 
+
 check_character_coin_collision_3:
     mov ax,[coin_loc_y]
     add ax,coin_height
@@ -326,17 +353,32 @@ no_character_coin_collision:
     neg bx
     cmp ax,bx
     jg draw_coin
-init_coin_reset:    
+
+init_coin_reset:
     push 75
     call random
     add sp,2
-    add ax,75 
+    add ax,75
     mov [wait_to_draw_coin],ax
     mov [do_reset_coin],1
     mov [coin_loc_x],304
     jmp draw_char
-  
+
 draw_coin:
+
+    mov ax,[coin_loc_x]
+    add ax, coin_width
+    cmp ax, [wall_loc_x]
+    jb cont_d_ok
+
+    mov ax,[wall_loc_x]
+    add ax, wall_width
+    cmp ax,[coin_loc_x]
+    jb cont_d_ok
+    ;mov [do_reset_coin],1
+    jmp draw_char
+
+    cont_d_ok:
     push OFFSET coin1
     push [coin_loc_y]
     push [coin_loc_x]
@@ -350,10 +392,20 @@ draw_char:
     call draw_character
     add sp,6h
 
+    ;draw wall
+    mov ax,[seconds_since_start]
+    mov cl,30
+    div cl
+    mov [thirty_sec],al
+
+
+
+
+    color_seted:
     push [wall_gap_floor]
     push [wall_gap_ceil]
     push wall_width
-    push wall_color
+    push [wall_color]
     push [wall_loc_x]
     call draw_wall
     add sp,0Ah
@@ -403,24 +455,39 @@ timer_no_zero_fill:
     mov ax,[coins_counter]
     call print_num
 
-    jmp main_loop    
+    jmp main_loop
 
 reset_wall:
     mov ax,[wall_gap_ceil]
     push ax
     mov ax,[wall_gap_floor]
-    push ax 
+    push ax
     mov ax,wall_velocity
     max ax,wall_width
     push ax
     push 0
     add ax,[wall_loc_x]
-    push ax 
+    push ax
     call draw_wall
     add sp,0Ah
 
     mov [wall_loc_x],13Fh
     call init_wall_gap
+
+    cmp [thirty_sec],0
+    ja color2l
+    mov [wall_color],color1
+    jmp color_seted
+
+
+    color2l:
+    cmp [thirty_sec],1
+    ja color3l
+    mov [wall_color],color2
+    jmp color_seted
+
+    color3l:
+    mov [wall_color],color3
 
     ;call updateScreenBuffer
     jmp main_loop
@@ -439,7 +506,7 @@ game_over:
     mov dx,0
     mov bh,0
     mov ah,02h
-    int 10h 
+    int 10h
 
     mov dx,OFFSET game_over_array
     mov ah,9

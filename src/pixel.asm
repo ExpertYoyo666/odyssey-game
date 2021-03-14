@@ -8,7 +8,7 @@ videoBuffer db 64000 dup (0)
 CODESEG
 ; draws a pixel in buffer.
 ; sp + 4: color
-; sp + 6: y 
+; sp + 6: y
 ; sp + 8: x
 PUBLIC draw_pixel
 proc draw_pixel
@@ -23,13 +23,13 @@ proc draw_pixel
 
     mov ax,[bp+6]
     mov dx,320
-    mul dx            
-    mov di,[bp+4]         
-    add di,ax            
+    mul dx
+    mov di,[bp+4]
+    add di,ax
     mov bx,offset videoBuffer
     add bx,di
-    mov al,[bp+8]           
-    mov [ds:bx],al     
+    mov al,[bp+8]
+    mov [ds:bx],al
 
     pop es
     pop di
@@ -53,7 +53,7 @@ proc updateScreenBuffer
     push es
 
     mov dx,03DAh
-wait_retrace:   
+wait_retrace:
     in al,dx
     and al,08h
     jnz wait_retrace
@@ -87,4 +87,3 @@ copy_loop:
 endp updateScreenBuffer
 
 END
-      
